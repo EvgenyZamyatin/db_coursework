@@ -4,7 +4,7 @@ CREATE OR REPLACE FUNCTION check_rank_history_() RETURNS "trigger" AS $check_ran
     old_rank INTEGER;
     BEGIN
         SELECT rank_id INTO old_rank FROM person WHERE person_id = NEW.person_id;
-        IF old_rank - NEW.rank_id <> 1 OR old_rank - NEW.rank_id <> -1
+        IF old_rank - NEW.rank_id <> 1 AND old_rank - NEW.rank_id <> -1
             THEN RETURN NULL;
         END IF;
         RETURN NEW;
@@ -22,8 +22,8 @@ CREATE RULE forbid_update_rank_history AS ON UPDATE TO rank_history DO NOTHING;
 
 
 -- Вместо вставки в rank_history делаем update person, а там дальше триггеры сами все делают.
-CREATE RULE forbid_insert_rank_history AS ON INSERT TO rank_history DO INSTEAD
-UPDATE person SET rank_id = NEW.rank_id WHERE person_id = NEW.person_id;
+-- CREATE RULE forbid_insert_rank_history AS ON INSERT TO rank_history DO INSTEAD
+-- UPDATE person SET rank_id = NEW.rank_id WHERE person_id = NEW.person_id;
 
 
 -- Функция, которая при изменении rank у person заносит изменения в rank_history.
@@ -79,13 +79,11 @@ CREATE OR REPLACE FUNCTION check_army_formation_() RETURNS "trigger" AS $check_a
                    WHERE
                        (parent_id = NEW.formation_id
                    AND (SELECT rank_id FROM person
-                        WHERE person_id = commander_id
-                        AND   rank_id > new_rank))
+                        WHERE person_id = commander_id) > new_rank)
                    OR
                        (formation_id = NEW.parent_id
                    AND (SELECT rank_id FROM person
-                        WHERE person_id = commander_id
-                        AND   rank_id < new_rank)))
+                        WHERE person_id = commander_id) < new_rank))
             THEN RETURN NULL;
         END IF;
 
@@ -99,20 +97,21 @@ FOR EACH ROW
 EXECUTE PROCEDURE check_army_formation_();
 
 CREATE OR REPLACE FUNCTION check_person_rank_update_() RETURNS "trigger" AS $check_person_rank_update_$
+    DECLARE
+    p INTEGER;
+    f INTEGER;
     BEGIN
-        IF EXISTS (SELECT formation_id AS f, parent_id AS p
-                   WHERE commander_id = NEW.person_id
-                   AND EXISTS (SELECT commander_id, parent_id, formation_id FROM army_formation
-                               WHERE
-                                   (parent_id = f
-                               AND (SELECT rank_id FROM person
-                                    WHERE person_id = commander_id
-                                    AND   rank_id > new_rank))
-                               OR
-                                   (formation_id = p
-                               AND (SELECT rank_id FROM person
-                                    WHERE person_id = commander_id
-                                    AND   rank_id < new_rank))))
+        SELECT formation_id INTO f FROM army_formation WHERE commander_id = NEW.person_id;
+        SELECT parent_id INTO p FROM army_formation WHERE commander_id = NEW.person_id;
+        IF FOUND AND EXISTS (SELECT commander_id, parent_id, formation_id FROM army_formation
+                   WHERE
+                       (parent_id = f
+                   AND (SELECT rank_id FROM person
+                        WHERE person_id = commander_id) > NEW.rank_id)
+                   OR
+                       (formation_id = p
+                   AND (SELECT rank_id FROM person
+                        WHERE person_id = commander_id) < NEW.rank_id))
             THEN RETURN NULL;
         END IF;
         RETURN NEW;

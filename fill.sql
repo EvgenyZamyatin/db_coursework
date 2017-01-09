@@ -42,3 +42,22 @@ INSERT INTO equipment (eq_name, eq_amount, required_rank) VALUES
 ('D1', 1, 3),
 ('E1', 1, 4),
 ('F1', 1, 5);
+
+
+INSERT INTO army_formation (formation_id, fromation_type, formation_name, commander_id, parent_id) VALUES
+(0, 'F4', 'DIVISION', 20, 0),
+
+(1, 'F3', 'BATTERY_0', 18, 0),
+
+(2, 'F2', 'PLAT_1', 16, 1),
+(3, 'F2', 'PLAT_2', 11, 1),
+
+(4, 'F1', 'SQUAD_1', 12, 2),
+(5, 'F1', 'SQUAD_2', 6, 2),
+(6, 'F1', 'SQUAD_3', 7, 3),
+(7, 'F1', 'SQUAD_4', 0, 3),
+
+(8, 'F0', 'UNIT_1', 1, 4),
+(9, 'F0', 'UNIT_2', 2, 5),
+(10, 'F0', 'UNIT_3', 3, 6),
+(11, 'F0', 'UNIT_4', 4, 7);
