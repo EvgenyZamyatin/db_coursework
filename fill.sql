@@ -61,3 +61,53 @@ INSERT INTO army_formation (formation_id, formation_type, formation_name, comman
 (9, 'F0', 'UNIT_2', 2, 5),
 (10, 'F0', 'UNIT_3', 3, 6),
 (11, 'F0', 'UNIT_4', 4, 7);
+
+select composition_unit(2);
+select take_equipment(0, 1, 10);
+select return_equipment(1, 9);
+
+select take_equipment(0, 5, 10);
+
+select give_access(10, 1, 2, INTERVAL '1 DAY');
+select take_equipment(1, 1, 10);
+
+select * from available_equipment;
+select * from taken_equipment;
+
+select return_equipment(3, 5);
+
+select * from available_equipment;
+select * from taken_equipment;
+
+select give_raise(0, true);
+select give_raise(0, true);
+select give_raise(0, true);
+select give_raise(0, false);
+select give_raise(0, false);
+select give_raise(0, false);
+
+select take_equipment(1, 1, 10);
+select taken_eq_by(1);
+
+-- Просрочившие additional_equipment_access person.
+SELECT equipment_use_history.*
+FROM equipment_use_history NATURAL JOIN person NATURAL JOIN equipment
+WHERE return_date > NOW()
+AND   required_rank > rank_id
+AND   NOT EXISTS (
+    SELECT *
+    FROM additional_equipment_access
+    WHERE to_person_id = person_id
+    AND   additional_equipment_access.eq_id = equipment_use_history.eq_id
+    AND   inspiration_date > NOW()
+);
+
+-- Статистика по rank.
+SELECT rank_id, COUNT(*)
+FROM person
+GROUP BY rank_id;
+
+-- Статистика по formation_type.
+SELECT formation_type, COUNT(*)
+FROM army_formation
+GROUP BY formation_type;

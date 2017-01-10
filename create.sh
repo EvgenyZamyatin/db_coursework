@@ -8,5 +8,7 @@ echo "=== CREATE TRIGGERS ==="
 psql -d army1 -f triggers.sql
 echo "=== CREATE FUNCTIONS ==="
 psql -d army1 -f functions.sql
+echo "=== CREATE INDEXES ==="
+psql -d army1 -f indexes.sql
 echo "=== CREATE RECORDS ==="
 psql -d army1 -f fill.sql

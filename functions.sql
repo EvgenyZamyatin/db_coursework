@@ -52,10 +52,10 @@ CREATE OR REPLACE FUNCTION give_raise(p INT, up BOOLEAN) RETURNS BOOLEAN AS $giv
 $give_raise$ LANGUAGE plpgsql;
 
 
--- Функция, позваляющая узнать, какой eq на руках у person.
+-- Функция, позволяющая узнать, какой eq на руках у person.
 CREATE OR REPLACE FUNCTION taken_eq_by(p INT) RETURNS SETOF equipment_use_history AS $taken_eq_by$
     BEGIN
-        RETURN QUERY SELECT * FROM equipment_use_history WHERE person_id = p;
+        RETURN QUERY SELECT * FROM equipment_use_history WHERE person_id = p AND return_date > NOW();
     END;
 $taken_eq_by$ LANGUAGE plpgsql;
 
@@ -79,3 +79,11 @@ CREATE OR REPLACE FUNCTION null_commanders() RETURNS SETOF army_formation AS $nu
         RETURN QUERY SELECT * FROM army_formation WHERE commander_id IS NULL;
     END;
 $null_commanders$ LANGUAGE plpgsql;
+
+
+-- Функция, позволяющая узнать, кто служил в определенный промежуток времени.
+CREATE OR REPLACE FUNCTION persons_by_time(a TIMESTAMP, b TIMESTAMP) RETURNS SETOF person AS $persons_by_time$
+    BEGIN
+        RETURN QUERY SELECT * FROM person WHERE MAX(registered, a) < MIN(unregistered, b);
+    END;
+$persons_by_time$ LANGUAGE plpgsql;

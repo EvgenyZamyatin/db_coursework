@@ -23,3 +23,30 @@
 ## views:
 * taken_equipment -- Для каждого eq количество взятых единиц.
 * available_equipment -- Для каждого eq количество доступных единиц.
+
+
+## functions:
+* take_equipment(p INT, e INT, a INT) -- Функция, позволяющая взять eq.
+* return_equipment(e INT, a INT) -- Функция, позволяющая вернуть eq.
+* give_access(fp INT, tp INT, e INT, d INTERVAL) -- Функция, позволяющая выдать разрешение на получение eq.
+* give_raise(p INT, up BOOLEAN) -- Функция, позволяющая повысить person.
+* taken_eq_by(p INT) -- Функция, позволяющая узнать, какой eq на руках у person.
+* composition_unit(f INT) -- Функция, позволяющая узнать состав подразделения.
+* null_commanders() -- Функция, позволяющая узнать подразделения без командира.
+* persons_by_time(a TIMESTAMP, b TIMESTAMP) -- Функция, позволяющая узнать, кто служил в определенный промежуток времени.
+
+
+## indexes:
+* person_time_index ON person(registered ASC, unregistered ASC);
+* person_id_index ON person(person_id);
+* rank_history_time_index ON rank_history(event_date ASC);
+* rank_history_id_index ON rank_history(event_id);
+* rank_id_index ON rank(rank_id);
+* equipment_id_index ON equipment(eq_id);
+* equipment_use_history_id_index ON equipment_use_history(event_id);
+* equipment_use_history_return_date_index ON equipment_use_history(return_date ASC, take_date ASC);
+* additional_equipment_access_id_index ON additional_equipment_access(event_id);
+* additional_equipment_access_tpid_index ON additional_equipment_access(to_person_id, eq_id);
+* additional_equipment_access_time_index ON additional_equipment_access(inspiration_date ASC);
+* army_formation_parent_id ON army_formation(parent_id);
+* army_formation_commander_id ON army_formation(commander_id);
