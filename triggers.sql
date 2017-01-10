@@ -21,11 +21,6 @@ EXECUTE PROCEDURE check_rank_history_();
 CREATE RULE forbid_update_rank_history AS ON UPDATE TO rank_history DO NOTHING;
 
 
--- Вместо вставки в rank_history делаем update person, а там дальше триггеры сами все делают.
--- CREATE RULE forbid_insert_rank_history AS ON INSERT TO rank_history DO INSTEAD
--- UPDATE person SET rank_id = NEW.rank_id WHERE person_id = NEW.person_id;
-
-
 -- Функция, которая при изменении rank у person заносит изменения в rank_history.
 CREATE OR REPLACE FUNCTION write_rank_history_() RETURNS "trigger" AS $write_rank_history_$
     BEGIN
@@ -49,8 +44,8 @@ CREATE OR REPLACE FUNCTION check_unique_commander_() RETURNS "trigger" AS $check
         IF NEW.commander_id IS NULL
             THEN RETURN NEW;
         END IF;
-        IF EXISTS (SELECT commander_id FROM army_formation
-                   WHERE  commander_id = NEW.commander_id)
+        IF EXISTS (SELECT commander_id, formation_id FROM army_formation
+                   WHERE  commander_id = NEW.commander_id AND NEW.formation_id <> formation_id)
             THEN RETURN NULL;
         END IF;
         RETURN NEW;
@@ -63,7 +58,7 @@ FOR EACH ROW
 EXECUTE PROCEDURE check_unique_commander_();
 
 
--- Проверка того, что вышестоящий по званию командир не может быть у нижестоящщего в подчинении.
+-- Проверка того, что вышестоящий по званию командир не может быть у нижестоящего в подчинении.
 CREATE OR REPLACE FUNCTION check_army_formation_() RETURNS "trigger" AS $check_army_formation_$
     DECLARE
     new_rank INTEGER;
@@ -129,7 +124,7 @@ CREATE OR REPLACE FUNCTION check_eq_access_() RETURNS "trigger" AS $check_eq_acc
     BEGIN
         IF (SELECT rank_id FROM person WHERE person_id = NEW.person_id) >= (SELECT required_rank FROM equipment WHERE eq_id = NEW.eq_id)
             OR EXISTS (SELECT to_person_id, eq_id, inspiration_date FROM additional_equipment_access
-                       WHERE person_id = NEW.person_id
+                       WHERE to_person_id = NEW.person_id
                        AND   eq_id = NEW.eq_id
                        AND   inspiration_date > NEW.take_date)
             THEN RETURN NEW;
@@ -163,6 +158,10 @@ EXECUTE PROCEDURE check_person_can_give_access_();
 -- Проверка того, что имеющегося eq хватает для запроса.
 CREATE OR REPLACE FUNCTION check_eq_amount_() RETURNS "trigger" AS $check_eq_amount_$
     BEGIN
+        IF NEW.taken_amount = 0 THEN
+            RETURN NULL;
+        END IF;
+
         IF (SELECT total_available FROM available_equipment WHERE eq_id = NEW.eq_id) >= NEW.taken_amount
             THEN RETURN NEW;
         END IF;
@@ -174,3 +173,21 @@ CREATE TRIGGER check_eq_amount_trigger
 BEFORE INSERT ON equipment_use_history
 FOR EACH ROW
 EXECUTE PROCEDURE check_eq_amount_();
+
+
+-- Проверка того, что тип родителя у formation больше.
+CREATE OR REPLACE FUNCTION check_army_formation_type_() RETURNS "trigger" AS $check_army_formation_type_$
+    BEGIN
+        IF EXISTS (SELECT parent_id, formation_id, formation_type FROM army_formation
+                   WHERE (parent_id = NEW.formation_id AND NEW.formation_type < formation_type)
+                   OR    (formation_id = NEW.parent_id AND NEW.formation_type > formation_type))
+            THEN RETURN NULL;
+        END IF;
+        RETURN NEW;
+    END;
+$check_army_formation_type_$ LANGUAGE plpgsql;
+
+CREATE TRIGGER check_army_formation_type_trigger
+BEFORE INSERT OR UPDATE ON army_formation
+FOR EACH ROW
+EXECUTE PROCEDURE check_army_formation_type_();

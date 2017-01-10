@@ -12,7 +12,7 @@ CREATE TYPE FORMATIONS AS ENUM ('F0', 'F1', 'F2', 'F3', 'F4');
 CREATE TABLE army_formation
 (
     formation_id INTEGER PRIMARY KEY NOT NULL,
-    fromation_type FORMATIONS NOT NULL,
+    formation_type FORMATIONS NOT NULL,
     formation_name VARCHAR(100) NOT NULL,
     commander_id INTEGER,
     parent_id INTEGER NOT NULL
@@ -31,7 +31,7 @@ CREATE TABLE equipment_use_history
     take_date TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL,
     return_date TIMESTAMP WITH TIME ZONE DEFAULT 'infinity'::timestamp with time zone NOT NULL,
     taken_amount INTEGER NOT NULL,
-    returned_amount INTEGER NOT NULL,
+    returned_amount INTEGER NOT NULL DEFAULT 0,
     person_id INTEGER NOT NULL,
     eq_id INTEGER NOT NULL,
     event_id SERIAL PRIMARY KEY NOT NULL

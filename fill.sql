@@ -44,7 +44,7 @@ INSERT INTO equipment (eq_name, eq_amount, required_rank) VALUES
 ('F1', 1, 5);
 
 
-INSERT INTO army_formation (formation_id, fromation_type, formation_name, commander_id, parent_id) VALUES
+INSERT INTO army_formation (formation_id, formation_type, formation_name, commander_id, parent_id) VALUES
 (0, 'F4', 'DIVISION', 20, 0),
 
 (1, 'F3', 'BATTERY_0', 18, 0),
